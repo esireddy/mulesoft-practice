@@ -7,3 +7,7 @@ source:
 scheduler:
   timezone: "America/Chicago"
   expression: "0 0 5 * * ?"
+  
+gender:
+  male: 'M'
+  female: 'F'

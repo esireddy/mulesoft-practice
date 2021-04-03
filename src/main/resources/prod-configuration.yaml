@@ -1,0 +1,13 @@
+source:
+  rootfolder: "C:/Tools/refresh"
+  subfolder: "Input"
+  processedfolder: "Output"
+  filepattern: "*.csv"
+  
+scheduler:
+  timezone: "America/Chicago"
+  expression: "0 0 5 * * ?"
+  
+gender:
+  male: 'M'
+  female: 'F'

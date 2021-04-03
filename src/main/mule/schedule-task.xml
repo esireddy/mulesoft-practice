@@ -38,10 +38,17 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		</file:list>
 		<logger level="INFO" doc:name="Logger" doc:id="67f3693d-6077-43e7-a306-68d0ba9d0d73" />
 		<foreach doc:name="For Each" doc:id="0f389dfc-0d1b-453e-9434-c4d4c9540d9a" collection="#[payload]">
-			<flow-ref doc:name="Flow Reference" doc:id="fcfc9cc6-61ec-4cd0-a549-e6057fd3d50d" name="processCSVRecords" />
-			<logger level="INFO" doc:name="Logger" doc:id="07c1793a-87ca-43a7-91a1-919a7c689846" />
-			<file:move doc:name="Move" doc:id="86e1ad44-4880-48f1-a64f-4343b48b2634" config-ref="File_Config" sourcePath="#[attributes.path]" targetPath="${source.processedfolder}" overwrite="true" renameTo="#[attributes.fileName as String ++ '.' ++ (now() as String {format: &quot;yyyy_MM_dd_HH_mm_ss_SSS&quot;}) ++ '.success']" />
-			<logger level="INFO" doc:name="Logger" doc:id="e6f0a52f-a947-4e6b-bb96-23fec2242028" message="file name is : #[payload.path]" />
+			<try doc:name="Try" doc:id="890ccc87-cb5a-4d87-ba65-5bac207114ac" >
+				<flow-ref doc:name="Flow Reference" doc:id="fcfc9cc6-61ec-4cd0-a549-e6057fd3d50d" name="processCSVRecords" />
+				<logger level="INFO" doc:name="Logger" doc:id="07c1793a-87ca-43a7-91a1-919a7c689846" />
+				<file:move doc:name="Move" doc:id="86e1ad44-4880-48f1-a64f-4343b48b2634" config-ref="File_Config" sourcePath="#[attributes.path]" targetPath="${source.processedfolder}" overwrite="true" renameTo="#[attributes.fileName as String ++ '.' ++ (now() as String {format: &quot;yyyy_MM_dd_HH_mm_ss_SSS&quot;}) ++ '.success']" />
+				<logger level="INFO" doc:name="Logger" doc:id="e6f0a52f-a947-4e6b-bb96-23fec2242028" message="file name is : #[payload.path]" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="51cf0c7e-730d-4673-9cb3-328b355016b5" type="FILE:ACCESS_DENIED, FILE:CONNECTIVITY, FILE:ILLEGAL_CONTENT, FILE:ILLEGAL_PATH">
+						<logger level="INFO" doc:name="Logger" doc:id="39bc53eb-4ecc-451f-8568-56bd4da328b2" message="Ignoring Error... and continue to next file for processing..."/>
+					</on-error-continue>
+				</error-handler>
+			</try>
 		</foreach>
 	</flow>
 	<sub-flow name="processCSVRecords" doc:id="9d99617e-fac3-4b12-b1c8-c780de6d478d" >
@@ -70,12 +77,12 @@ payload.Gender]]></ee:set-variable>
 					</ee:transform>
 		<foreach doc:name="For Each" doc:id="2ac7fc85-d449-4788-aecc-4c7448e5ddc4" >
 			<choice doc:name="Choice" doc:id="34eda3ff-e188-4c7e-b628-e58265d0b440">
-						<when expression="payload.Gender == 'M'">
+						<when expression="payload.Gender == ${gender.male}">
 							<file:write doc:name="Filter Male" doc:id="da20043c-cba3-48b2-be5c-e42049042ca7" config-ref="File_Config" path="#['Gender_' as String ++ payload.Gender as String ++ '_Auto_Generated'++ '.json']" mode="APPEND">
 						<file:content ><![CDATA[#[write(payload, 'application/json')]]]></file:content>
 					</file:write>
 						</when>
-				<when expression="payload.Gender == 'F'">
+				<when expression="payload.Gender == ${gender.female}">
 					<file:write doc:name="Filter Female" doc:id="27694425-4c01-4680-9411-2bccdf771847" config-ref="File_Config" path="#['Gender_' as String ++ payload.Gender as String ++ '_Auto_Generated'++ '.json']" mode="APPEND">
 						<file:content ><![CDATA[#[write(payload, 'application/json')]]]></file:content>
 					</file:write>

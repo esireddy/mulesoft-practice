@@ -18,10 +18,10 @@ type Employee = Array<{|  "﻿Emp ID": String,   "Name Prefix": String,   "First
       </types:properties>
     </types:type>
     <types:type name="EmployeePOJO" format="java">
-      <types:shape format="java" element="EmployeePOJO"/>
+      <types:shape format="java" element="com.mulesoft.practice.EmployeePOJO"/>
     </types:type>
     <types:type name="FlightPOJO" format="java">
-      <types:shape format="java" element="Flight"/>
+      <types:shape format="java" element="com.mulesoft.practice.Flight"/>
     </types:type>
   </types:catalog>
   <types:enrichment select="#fe348690-7556-49f3-9d74-577abab692b0">
@@ -33,7 +33,7 @@ type Employee = Array<{|  "﻿Emp ID": String,   "Name Prefix": String,   "First
       </types:input-event>
       <types:output-event>
         <types:message>
-          <types:payload type="EmployeePOJO[]"/>
+          <types:payload type="EmployeePOJO"/>
         </types:message>
       </types:output-event>
     </types:processor-declaration>

@@ -3,5 +3,6 @@
 <mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
-	<configuration-properties doc:name="Configuration properties" doc:id="2d8e6a95-9746-4348-b5d9-f9065cda4a77" file="configuration.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="2d8e6a95-9746-4348-b5d9-f9065cda4a77" file="${env}-configuration.yaml" />
+	<global-property doc:name="Global Property" doc:id="6ac07293-6e20-4a8b-9075-c45a92686ba4" name="env" value="Dev" />
 </mule>
