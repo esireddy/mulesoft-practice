@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Employee" format="csv">
+      <types:shape format="weave" example="examples/5000 Records.csv"><![CDATA[%dw 2.0
+
+type Employee = Array<{|  "﻿Emp ID": String,   "Name Prefix": String,   "First Name": String,   "Middle Initial": String,   "Last Name": String,   Gender: String,   "E Mail": String,   "Father's Name": String,   "Mother's Name": String,   "Mother's Maiden Name": String,   "Date of Birth": String,   "Time of Birth": String,   "Age in Yrs.": String,   "Weight in Kgs.": String,   "Date of Joining": String,   "Quarter of Joining": String,   "Half of Joining": String,   "Year of Joining": String,   "Month of Joining": String,   "Month Name of Joining": String,   "Short Month": String,   "Day of Joining": String,   "DOW of Joining": String,   "Short DOW": String,   "Age in Company (Years)": String,   Salary: String,   "Last % Hike": String,   SSN: String,   "Phone No. ": String,   "Place Name": String,   County: String,   City: String,   State: String,   Zip: String,   Region: String,   "User Name": String,   Password: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0",
+"separator": ","}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+        <types:property name="separator" value=","/>
+      </types:properties>
+    </types:type>
+    <types:type name="EmployeePOJO" format="java">
+      <types:shape format="java" element="EmployeePOJO"/>
+    </types:type>
+    <types:type name="FlightPOJO" format="java">
+      <types:shape format="java" element="Flight"/>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#fe348690-7556-49f3-9d74-577abab692b0">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Employee"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="EmployeePOJO[]"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

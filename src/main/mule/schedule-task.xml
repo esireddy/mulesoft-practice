@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="989867ab-6adf-426a-9b33-b72a04efb0d5" >
+		<file:connection workingDir="${source.rootfolder}" >
+			<reconnection failsDeployment="true" >
+				<reconnect count="3" />
+			</reconnection>
+		</file:connection>
+	</file:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="957ac0ae-b7b3-4ba3-8327-1bf7caa07b35" file="configuration.yaml" />
+	<flow name="OnScheduledTime" doc:id="a9baba91-80ae-45ee-8a07-5e303ee21adf" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="d851a8aa-3793-44d1-ac72-f24752e1b2d1" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="5" timeUnit="SECONDS" />
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="a029918b-7587-4a28-ad7f-7033d0d391e5" message="Tigger from scheuler...."/>
+		<flow-ref doc:name="Flow Reference" doc:id="cd9967a7-d745-4de6-89c5-12744e40a1f2" name="ReadNTransform"/>
+	</flow>
+	<flow name="OnNewFileCreation" doc:id="db32e0af-44cf-49ac-98dc-19685d331425" initialState="started">
+		<file:listener doc:name="On New or Updated File" doc:id="09daa1d8-0355-4c43-9e02-04a157b8cd0c" config-ref="File_Config" directory="${source.rootfolder}" timeBetweenSizeCheckUnit="HOURS">
+			<scheduling-strategy >
+				<fixed-frequency frequency="5" timeUnit="SECONDS" />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="${source.filepattern}" />
+		</file:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="8520fd31-d0ac-4f54-a680-b506a876c4d8" message="Tigger from new file...."/>
+		<flow-ref doc:name="Flow Reference" doc:id="6ae65d03-adb4-421e-a6f8-1eedc105c7ac" name="ReadNTransform"/>
+	</flow>
+	<flow name="ReadNTransform" doc:id="df49a68a-96b1-43fb-b5ef-c46216af710c">
+		<file:list doc:name="List" doc:id="cd49d1f1-8172-444b-8937-dbbcf9d94b34" directoryPath="${source.subfolder}" config-ref="File_Config">
+			<file:matcher filenamePattern="*.csv"/>
+		</file:list>
+		<logger level="INFO" doc:name="Logger" doc:id="67f3693d-6077-43e7-a306-68d0ba9d0d73" />
+		<foreach doc:name="For Each" doc:id="0f389dfc-0d1b-453e-9434-c4d4c9540d9a" collection="#[payload]">
+			<flow-ref doc:name="Flow Reference" doc:id="fcfc9cc6-61ec-4cd0-a549-e6057fd3d50d" name="processCSVRecords" />
+			<logger level="INFO" doc:name="Logger" doc:id="07c1793a-87ca-43a7-91a1-919a7c689846" />
+			<file:move doc:name="Move" doc:id="86e1ad44-4880-48f1-a64f-4343b48b2634" config-ref="File_Config" sourcePath="#[attributes.path]" targetPath="${source.processedfolder}" overwrite="true" renameTo="#[attributes.fileName as String ++ '.' ++ (now() as String {format: &quot;yyyy_MM_dd_HH_mm_ss_SSS&quot;}) ++ '.success']" />
+			<logger level="INFO" doc:name="Logger" doc:id="e6f0a52f-a947-4e6b-bb96-23fec2242028" message="file name is : #[payload.path]" />
+		</foreach>
+	</flow>
+	<sub-flow name="processCSVRecords" doc:id="9d99617e-fac3-4b12-b1c8-c780de6d478d" >
+		<ee:transform doc:name="Transform Message" doc:id="fe348690-7556-49f3-9d74-577abab692b0">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	employeeID: payload01."﻿Emp ID" as Number default 0,
+	firstName: payload01."First Name" default '',
+	gender: payload01.Gender default 'NA',
+	lastName: payload01."Last Name" default '',
+	middleInitial: payload01."Middle Initial" default '',
+	namePrefix: payload01."Name Prefix" default ''
+} as Object {
+	class : "EmployeePOJO"
+}]]></ee:set-payload>
+						</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="genderType" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.Gender]]></ee:set-variable>
+			</ee:variables>
+					</ee:transform>
+		<foreach doc:name="For Each" doc:id="2ac7fc85-d449-4788-aecc-4c7448e5ddc4" >
+			<choice doc:name="Choice" doc:id="34eda3ff-e188-4c7e-b628-e58265d0b440">
+						<when expression="payload.Gender == 'M'">
+							<file:write doc:name="Filter Male" doc:id="da20043c-cba3-48b2-be5c-e42049042ca7" config-ref="File_Config" path="#['Gender_' as String ++ payload.Gender as String ++ '_Auto_Generated'++ '.json']" mode="APPEND">
+						<file:content ><![CDATA[#[write(payload, 'application/json')]]]></file:content>
+					</file:write>
+						</when>
+				<when expression="payload.Gender == 'F'">
+					<file:write doc:name="Filter Female" doc:id="27694425-4c01-4680-9411-2bccdf771847" config-ref="File_Config" path="#['Gender_' as String ++ payload.Gender as String ++ '_Auto_Generated'++ '.json']" mode="APPEND">
+						<file:content ><![CDATA[#[write(payload, 'application/json')]]]></file:content>
+					</file:write>
+				</when>
+				<otherwise >
+					<file:write doc:name="Filter Non Male/Female" doc:id="9247ebbf-e9e8-4b90-806f-056c59d2e535" config-ref="File_Config" path="#['Gender_' as String ++ payload.Gender as String ++ '_Auto_Generated'++ '.json']" mode="APPEND">
+						<file:content ><![CDATA[#[write(payload, 'application/json')]]]></file:content>
+					</file:write>
+				</otherwise>
+					</choice>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="269e9701-f164-4f96-bd83-ec88dae1a40a" />
+	</sub-flow>
+</mule>
